@@ -497,6 +497,52 @@ function lerPedidos() {
         });
     });
 }
+// ---------- FILTRO DE PEDIDOS POR DATA ----------
+function filtrarPedidosPorData() {
+    return __awaiter(this, void 0, void 0, function () {
+        var pedidos, dataIniStr, dataFimStr, _a, diaIni, mesIni, anoIni, _b, diaFim, mesFim, anoFim, dataIni, dataFim, filtrados, totalPeriodo;
+        return __generator(this, function (_c) {
+            switch (_c.label) {
+                case 0: return [4 /*yield*/, lerPedidos()];
+                case 1:
+                    pedidos = _c.sent();
+                    if (pedidos.length === 0) {
+                        console.log('Nenhum pedido registrado.');
+                        return [2 /*return*/];
+                    }
+                    return [4 /*yield*/, ask('Data inicial (DD/MM/AAAA): ')];
+                case 2:
+                    dataIniStr = _c.sent();
+                    return [4 /*yield*/, ask('Data final (DD/MM/AAAA): ')];
+                case 3:
+                    dataFimStr = _c.sent();
+                    _a = dataIniStr.split('/').map(Number), diaIni = _a[0], mesIni = _a[1], anoIni = _a[2];
+                    _b = dataFimStr.split('/').map(Number), diaFim = _b[0], mesFim = _b[1], anoFim = _b[2];
+                    dataIni = new Date(anoIni, mesIni - 1, diaIni);
+                    dataFim = new Date(anoFim, mesFim - 1, diaFim);
+                    filtrados = pedidos.filter(function (p) {
+                        var dt = new Date(p.dataISO);
+                        return dt >= dataIni && dt <= dataFim;
+                    });
+                    if (filtrados.length === 0) {
+                        console.log('Nenhum pedido encontrado nesse período.');
+                        return [2 /*return*/];
+                    }
+                    console.log("\nPedidos de ".concat(dataIniStr, " at\u00E9 ").concat(dataFimStr, ":"));
+                    filtrados.forEach(function (p) {
+                        var _a;
+                        var data = new Date(p.dataISO);
+                        var dataFormatada = "".concat(String(data.getDate()).padStart(2, '0'), "/").concat(String(data.getMonth() + 1).padStart(2, '0'), "/").concat(data.getFullYear());
+                        console.log("ID: ".concat(p.id, ", Cliente: ").concat((_a = p.clienteNome) !== null && _a !== void 0 ? _a : 'Não informado', ", Total: R$ ").concat(p.total.toFixed(2), ", Data: ").concat(dataFormatada));
+                    });
+                    totalPeriodo = filtrados.reduce(function (s, p) { return s + p.total; }, 0);
+                    console.log("Total de pedidos no per\u00EDodo: ".concat(filtrados.length));
+                    console.log("Total em vendas: R$ ".concat(totalPeriodo.toFixed(2)));
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
 // ---------- Console interativo (menu) ----------
 var rl = readline.createInterface({ input: process_1.stdin, output: process_1.stdout });
 function ask(q) {
@@ -504,19 +550,19 @@ function ask(q) {
 }
 function menuPrincipal() {
     return __awaiter(this, void 0, void 0, function () {
-        var loop, op;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
+        var loop, op, sub, subOp, _a;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
                 case 0: return [4 /*yield*/, ensureFiles()];
                 case 1:
-                    _a.sent();
+                    _b.sent();
                     return [4 /*yield*/, carregarProdutosIniciais()];
                 case 2:
-                    _a.sent();
+                    _b.sent();
                     loop = true;
-                    _a.label = 3;
+                    _b.label = 3;
                 case 3:
-                    if (!loop) return [3 /*break*/, 16];
+                    if (!loop) return [3 /*break*/, 25];
                     console.log('\n===== PIZZARIA - MENU PRINCIPAL =====');
                     console.log('1) Clientes');
                     console.log('2) Produtos');
@@ -526,37 +572,70 @@ function menuPrincipal() {
                     console.log('6) Sair');
                     return [4 /*yield*/, ask('Escolha: ')];
                 case 4:
-                    op = (_a.sent()).trim();
+                    op = (_b.sent()).trim();
                     if (!(op === '1')) return [3 /*break*/, 6];
                     return [4 /*yield*/, menuClientes()];
                 case 5:
-                    _a.sent();
-                    return [3 /*break*/, 15];
+                    _b.sent();
+                    return [3 /*break*/, 24];
                 case 6:
                     if (!(op === '2')) return [3 /*break*/, 8];
                     return [4 /*yield*/, menuProdutos()];
                 case 7:
-                    _a.sent();
-                    return [3 /*break*/, 15];
+                    _b.sent();
+                    return [3 /*break*/, 24];
                 case 8:
                     if (!(op === '3')) return [3 /*break*/, 10];
                     return [4 /*yield*/, menuCarrinho()];
                 case 9:
-                    _a.sent();
-                    return [3 /*break*/, 15];
+                    _b.sent();
+                    return [3 /*break*/, 24];
                 case 10:
                     if (!(op === '4')) return [3 /*break*/, 12];
                     return [4 /*yield*/, fluxoFinalizarPedido()];
                 case 11:
-                    _a.sent();
-                    return [3 /*break*/, 15];
+                    _b.sent();
+                    return [3 /*break*/, 24];
                 case 12:
-                    if (!(op === '5')) return [3 /*break*/, 14];
-                    return [4 /*yield*/, gerarRelatorios()];
+                    if (!(op === '5')) return [3 /*break*/, 23];
+                    sub = true;
+                    _b.label = 13;
                 case 13:
-                    _a.sent();
-                    return [3 /*break*/, 15];
+                    if (!sub) return [3 /*break*/, 22];
+                    console.log('\n--- RELATÓRIOS ---');
+                    console.log('1) Relatório completo');
+                    console.log('2) Filtrar por período/data');
+                    console.log('3) Voltar');
+                    return [4 /*yield*/, ask('Escolha: ')];
                 case 14:
+                    subOp = (_b.sent()).trim();
+                    _a = subOp;
+                    switch (_a) {
+                        case '1': return [3 /*break*/, 15];
+                        case '2': return [3 /*break*/, 17];
+                        case '3': return [3 /*break*/, 19];
+                    }
+                    return [3 /*break*/, 20];
+                case 15: return [4 /*yield*/, gerarRelatorios()];
+                case 16:
+                    _b.sent();
+                    return [3 /*break*/, 21];
+                case 17: return [4 /*yield*/, filtrarPedidosPorData()];
+                case 18:
+                    _b.sent();
+                    return [3 /*break*/, 21];
+                case 19:
+                    sub = false;
+                    return [3 /*break*/, 21];
+                case 20:
+                    console.log('Opção inválida.');
+                    _b.label = 21;
+                case 21:
+                    if (sub)
+                        console.log('');
+                    return [3 /*break*/, 13];
+                case 22: return [3 /*break*/, 24];
+                case 23:
                     if (op === '6') {
                         loop = false;
                         console.log('Encerrando sistema.');
@@ -564,9 +643,9 @@ function menuPrincipal() {
                     else {
                         console.log('Opção inválida.');
                     }
-                    _a.label = 15;
-                case 15: return [3 /*break*/, 3];
-                case 16:
+                    _b.label = 24;
+                case 24: return [3 /*break*/, 3];
+                case 25:
                     rl.close();
                     return [2 /*return*/];
             }
