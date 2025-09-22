@@ -553,8 +553,13 @@ async function filtrarPedidosPorData() {
         }
         const p = produtos[sel - 1];
         const qtd = parseInt(await ask('Quantidade: '), 10) || 1;
-        const obs = await ask('Observação (ex: meia com outro sabor) (opcional): ');
+        let obs: string | undefined;
+        if (p.categoria === 'Pizza') {
+          obs = await ask('Observação (ex: meia com outro sabor) (opcional): ');
+        }
+
         adicionarAoCarrinho({ produtoId: p.id, nome: p.nome, quantidade: qtd, precoUnit: p.preco, observacao: obs || undefined });
+
       } else if (op === '2') {
         verCarrinho();
       } else if (op === '3') {
@@ -571,6 +576,71 @@ async function filtrarPedidosPorData() {
       }
     }
   }
+
+  // Avaliação do sistema
+async function avaliarExperiencia(clienteNome?: string) {
+  console.log('\n===== AVALIAÇÃO =====');
+  console.log(`Cliente: ${clienteNome || 'Cliente não identificado'}`);
+  console.log('Nos avalie de 1 a 5 estrelas (1 = ruim, 5 = excelente)');
+
+  const notaStr = await ask('Sua nota: ');
+  const nota = parseInt(notaStr.trim(), 10);
+
+  if (isNaN(nota) || nota < 1 || nota > 5) {
+    console.log('Nota inválida. Avaliação ignorada.');
+    return;
+  }
+
+  // Agora salva o nome do cliente no registro
+  const feedback = `Cliente: ${clienteNome || 'Não informado'} | Avaliação: ${'★'.repeat(nota)}${'☆'.repeat(5 - nota)} (${nota}/5) | Data: ${new Date().toLocaleString()}`;
+
+  console.log('\n');
+  console.log(`Obrigado pelo feedback, ${clienteNome || 'Cliente'}! Você deu ${nota} estrela(s).`);
+  console.log('\n');
+  
+  const feedbackFile = path.join(DATA_DIR, 'avaliacoes.txt');
+  await appendCSV(feedbackFile, feedback);
+  console.log(`Avaliação salva em ${feedbackFile}`);
+}
+
+
+  //Emissão de comprovante de compra
+
+import { writeFileSync } from "fs";
+
+async function emitirComprovante(pedido: Pedido) {
+  // Cria a string do comprovante
+  let comprovante = '\n===== COMPROVANTE DE PEDIDO =====\n';
+  comprovante += `ID do Pedido: ${pedido.id}\n`;
+  comprovante += `Cliente: ${pedido.clienteNome ?? 'Cliente não identificado'}\n`;
+  comprovante += `Data: ${new Date(pedido.dataISO).toLocaleString()}\n\n`;
+  comprovante += 'Itens:\n';
+
+  // Mostra os itens do carrinho
+  pedido.itens.forEach((item, index) => {
+    const subtotal = item.precoUnit * item.quantidade;
+    comprovante += `${index + 1}) ${item.nome} - x${item.quantidade} - R$ ${subtotal.toFixed(2)}${item.observacao ? ` (${item.observacao})` : ''}\n`;
+  });
+
+  comprovante += `\nTotal: R$ ${pedido.total.toFixed(2)}\n`;
+  comprovante += `Forma de pagamento: ${pedido.formaPagamento}\n`;
+
+  // Se a forma de pagamento for dinheiro
+  if (pedido.trocoPara !== undefined) {
+    comprovante += `Troco para: R$ ${pedido.trocoPara.toFixed(2)}\n`;
+  }
+  
+  comprovante += '\n================================\n';
+  console.log('Comprovante emitido com sucesso!');
+  comprovante += 'Obrigado pela compra! \n';
+
+  // Mostra no terminal
+  console.log(comprovante);
+
+  // Salva em arquivo .txt
+  writeFileSync("comprovante.txt", comprovante, { encoding: "utf8" });
+  console.log("Comprovante salvo em 'comprovante.txt'");
+}
 
   async function fluxoFinalizarPedido() {
     if (CARRINHO.length === 0) {
@@ -611,7 +681,15 @@ async function filtrarPedidosPorData() {
       pedidoParcial.formaPagamento = 'Dinheiro';
     }
 
-    await gravarPedido(pedidoParcial);
+  //Grava o pedido
+  await gravarPedido(pedidoParcial);
+
+  //Emite o comprovante
+  await emitirComprovante(pedidoParcial);
+
+  //Pede avaliação
+  await avaliarExperiencia(pedidoParcial.clienteNome);
+
   }
 
   // ---------- Inicialização ----------

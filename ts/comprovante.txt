@@ -1,0 +1,14 @@
+
+===== COMPROVANTE DE PEDIDO =====
+ID do Pedido: O-mfufqmm7l2
+Cliente: Cliente não identificado
+Data: 21/09/2025, 22:16:07
+
+Itens:
+1) Guaraná 2L - x1 - R$ 12.00
+
+Total: R$ 12.00
+Forma de pagamento: Cartão
+
+================================
+Obrigado pela compra! 

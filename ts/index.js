@@ -865,7 +865,7 @@ function menuCarrinho() {
                     sub = true;
                     _d.label = 1;
                 case 1:
-                    if (!sub) return [3 /*break*/, 12];
+                    if (!sub) return [3 /*break*/, 13];
                     console.log('\n--- CARRINHO ---');
                     console.log('1) Adicionar produto ao carrinho');
                     console.log('2) Ver carrinho');
@@ -875,7 +875,7 @@ function menuCarrinho() {
                     return [4 /*yield*/, ask('Escolha: ')];
                 case 2:
                     op = (_d.sent()).trim();
-                    if (!(op === '1')) return [3 /*break*/, 7];
+                    if (!(op === '1')) return [3 /*break*/, 8];
                     return [4 /*yield*/, lerProdutos()];
                 case 3:
                     produtos = _d.sent();
@@ -893,25 +893,29 @@ function menuCarrinho() {
                     return [4 /*yield*/, ask('Quantidade: ')];
                 case 5:
                     qtd = _b.apply(void 0, [_d.sent(), 10]) || 1;
+                    obs = void 0;
+                    if (!(p.categoria === 'Pizza')) return [3 /*break*/, 7];
                     return [4 /*yield*/, ask('Observação (ex: meia com outro sabor) (opcional): ')];
                 case 6:
                     obs = _d.sent();
-                    adicionarAoCarrinho({ produtoId: p.id, nome: p.nome, quantidade: qtd, precoUnit: p.preco, observacao: obs || undefined });
-                    return [3 /*break*/, 11];
+                    _d.label = 7;
                 case 7:
-                    if (!(op === '2')) return [3 /*break*/, 8];
-                    verCarrinho();
-                    return [3 /*break*/, 11];
+                    adicionarAoCarrinho({ produtoId: p.id, nome: p.nome, quantidade: qtd, precoUnit: p.preco, observacao: obs || undefined });
+                    return [3 /*break*/, 12];
                 case 8:
-                    if (!(op === '3')) return [3 /*break*/, 10];
+                    if (!(op === '2')) return [3 /*break*/, 9];
+                    verCarrinho();
+                    return [3 /*break*/, 12];
+                case 9:
+                    if (!(op === '3')) return [3 /*break*/, 11];
                     verCarrinho();
                     _c = parseInt;
                     return [4 /*yield*/, ask('Índice do item a remover: ')];
-                case 9:
+                case 10:
                     idx = _c.apply(void 0, [_d.sent(), 10]);
                     removerDoCarrinho(idx);
-                    return [3 /*break*/, 11];
-                case 10:
+                    return [3 /*break*/, 12];
+                case 11:
                     if (op === '4') {
                         CARRINHO = [];
                         console.log('Carrinho limpo.');
@@ -922,10 +926,77 @@ function menuCarrinho() {
                     else {
                         console.log('Opção inválida.');
                     }
-                    _d.label = 11;
-                case 11: return [3 /*break*/, 1];
-                case 12: return [2 /*return*/];
+                    _d.label = 12;
+                case 12: return [3 /*break*/, 1];
+                case 13: return [2 /*return*/];
             }
+        });
+    });
+}
+// Avaliação do sistema
+function avaliarExperiencia(clienteNome) {
+    return __awaiter(this, void 0, void 0, function () {
+        var notaStr, nota, feedback, feedbackFile;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    console.log('\n===== AVALIAÇÃO =====');
+                    console.log("Cliente: ".concat(clienteNome || 'Cliente não identificado'));
+                    console.log('Nos avalie de 1 a 5 estrelas (1 = ruim, 5 = excelente)');
+                    return [4 /*yield*/, ask('Sua nota: ')];
+                case 1:
+                    notaStr = _a.sent();
+                    nota = parseInt(notaStr.trim(), 10);
+                    if (isNaN(nota) || nota < 1 || nota > 5) {
+                        console.log('Nota inválida. Avaliação ignorada.');
+                        return [2 /*return*/];
+                    }
+                    feedback = "Cliente: ".concat(clienteNome || 'Não informado', " | Avalia\u00E7\u00E3o: ").concat('★'.repeat(nota)).concat('☆'.repeat(5 - nota), " (").concat(nota, "/5) | Data: ").concat(new Date().toLocaleString());
+                    console.log('\n');
+                    console.log("Obrigado pelo feedback, ".concat(clienteNome || 'Cliente', "! Voc\u00EA deu ").concat(nota, " estrela(s)."));
+                    console.log('\n');
+                    feedbackFile = path.join(DATA_DIR, 'avaliacoes.txt');
+                    return [4 /*yield*/, appendCSV(feedbackFile, feedback)];
+                case 2:
+                    _a.sent();
+                    console.log("Avalia\u00E7\u00E3o salva em ".concat(feedbackFile));
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+//Emissão de comprovante de compra
+var fs_2 = require("fs");
+function emitirComprovante(pedido) {
+    return __awaiter(this, void 0, void 0, function () {
+        var comprovante;
+        var _a;
+        return __generator(this, function (_b) {
+            comprovante = '\n===== COMPROVANTE DE PEDIDO =====\n';
+            comprovante += "ID do Pedido: ".concat(pedido.id, "\n");
+            comprovante += "Cliente: ".concat((_a = pedido.clienteNome) !== null && _a !== void 0 ? _a : 'Cliente não identificado', "\n");
+            comprovante += "Data: ".concat(new Date(pedido.dataISO).toLocaleString(), "\n\n");
+            comprovante += 'Itens:\n';
+            // Mostra os itens do carrinho
+            pedido.itens.forEach(function (item, index) {
+                var subtotal = item.precoUnit * item.quantidade;
+                comprovante += "".concat(index + 1, ") ").concat(item.nome, " - x").concat(item.quantidade, " - R$ ").concat(subtotal.toFixed(2)).concat(item.observacao ? " (".concat(item.observacao, ")") : '', "\n");
+            });
+            comprovante += "\nTotal: R$ ".concat(pedido.total.toFixed(2), "\n");
+            comprovante += "Forma de pagamento: ".concat(pedido.formaPagamento, "\n");
+            // Se a forma de pagamento for dinheiro
+            if (pedido.trocoPara !== undefined) {
+                comprovante += "Troco para: R$ ".concat(pedido.trocoPara.toFixed(2), "\n");
+            }
+            comprovante += '\n================================\n';
+            console.log('Comprovante emitido com sucesso!');
+            comprovante += 'Obrigado pela compra! \n';
+            // Mostra no terminal
+            console.log(comprovante);
+            // Salva em arquivo .txt
+            (0, fs_2.writeFileSync)("comprovante.txt", comprovante, { encoding: "utf8" });
+            console.log("Comprovante salvo em 'comprovante.txt'");
+            return [2 /*return*/];
         });
     });
 }
@@ -993,8 +1064,21 @@ function fluxoFinalizarPedido() {
                         pedidoParcial.formaPagamento = 'Dinheiro';
                     }
                     _a.label = 11;
-                case 11: return [4 /*yield*/, gravarPedido(pedidoParcial)];
+                case 11: 
+                //Grava o pedido
+                return [4 /*yield*/, gravarPedido(pedidoParcial)];
                 case 12:
+                    //Grava o pedido
+                    _a.sent();
+                    //Emite o comprovante
+                    return [4 /*yield*/, emitirComprovante(pedidoParcial)];
+                case 13:
+                    //Emite o comprovante
+                    _a.sent();
+                    //Pede avaliação
+                    return [4 /*yield*/, avaliarExperiencia(pedidoParcial.clienteNome)];
+                case 14:
+                    //Pede avaliação
                     _a.sent();
                     return [2 /*return*/];
             }
