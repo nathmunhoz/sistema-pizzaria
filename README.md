@@ -1,4 +1,5 @@
 # sistema-pizzaria
 
 * criar novas pastas, para diminuir a quantidade de código
-* fazer com que o csv / txt não recarregue em um novo, deixar permanente
+* adicionar endereço no comprovante + poder trocar de endereços entre pedidos (mesmo cliente)
+* fazer documento no readme

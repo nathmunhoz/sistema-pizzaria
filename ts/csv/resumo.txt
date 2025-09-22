@@ -1,0 +1,22 @@
+Resumo de Vendas - 22/09/2025, 11:10:39
+Total pedidos: 11
+Total vendas: R$ 647.00
+
+Top produtos:
+Guaraná 2L: 3
+Romeu e Julieta (Inteira): 3
+Calabresa (Inteira): 2
+Coca-Cola 2L: 2
+Portuguesa (Inteira): 2
+Guarana Lata: 2
+Nutella com morango (Inteira): 2
+Meia-Meia 12p (2 sabores): 1
+8 pedaços (Meia): 1
+Doce de Leite (Inteira): 1
+
+Vendas por cliente:
+Nathalia: 1 pedidos - R$ 95.00
+Cliente não informado: 3 pedidos - R$ 123.00
+Vanessa: 1 pedidos - R$ 90.00
+Breno: 3 pedidos - R$ 102.00
+Nathalia Munhoz: 3 pedidos - R$ 237.00

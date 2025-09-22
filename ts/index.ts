@@ -3,12 +3,14 @@
   import { stdin as input, stdout as output } from 'process';
   import * as readline from 'readline';
 
-  const DATA_DIR = '.'; // altere se quiser colocar em outra pasta
+  const DATA_DIR = path.join(__dirname, 'csv'); // altere se quiser colocar em outra pasta
   const ARQ = {
     clientes: path.join(DATA_DIR, 'clientes.csv'),
     produtos: path.join(DATA_DIR, 'produtos.csv'),
     pedidos: path.join(DATA_DIR, 'pedidos.csv'),
     resumo: path.join(DATA_DIR, 'resumo.txt'),
+    comprovante: path.join(DATA_DIR, 'comprovante.txt'),
+    avaliacoes: path.join(DATA_DIR, 'avaliacoes.txt'),
   };
 
   type FormaPagamento = 'Pix' | 'Cartão' | 'Dinheiro' | 'Vale-alimentacao';
@@ -56,6 +58,12 @@
 
   // ---------- I/O CSV helpers ----------
   async function ensureFiles() {
+    try {
+      await fs.mkdir(DATA_DIR, { recursive: true});
+    } catch (e) {
+      console.error("Erro ao criar pasta CSV:", e);
+    }
+
     // cria arquivos se não existirem
     const files = Object.values(ARQ);
     for (const f of files) {
@@ -88,6 +96,17 @@
 
   // ---------- Clientes ----------
   async function cadastrarCliente(nome: string, telefone: string, email?: string, endereco?: string): Promise<Cliente> {
+    const clientes = await lerClientes();
+
+    const existente = clientes.find(c =>
+      c.telefone === telefone.trim() || (email && c.email === email.trim())
+    );
+
+    if (existente) {
+      console.log(`Cliente já cadastrado: ${existente.nome} (ID: ${existente.id})`);
+      return existente; // retorna cliente existente sem criar novo
+    }
+    
     const cliente: Cliente = {
       id: nid('C-'),
       nome: nome.trim(),
@@ -312,7 +331,6 @@
       ...Array.from(vendasPorCliente.entries()).map(([n, s]) => `${n}: ${s.qty} pedidos - R$ ${s.total.toFixed(2)}`)
     ];
     await fs.writeFile(ARQ.resumo, linhasResumo.join('\n'), 'utf8');
-    console.log(`\nResumo salvo em ${ARQ.resumo}`);
   }
 
   async function lerPedidos(): Promise<Pedido[]> {
@@ -383,7 +401,6 @@ async function filtrarPedidosPorData() {
 
   async function menuPrincipal() {
   await ensureFiles();
-  await carregarProdutosIniciais();
 
   let loop = true;
   while (loop) {
@@ -594,22 +611,14 @@ async function avaliarExperiencia(clienteNome?: string) {
   // Agora salva o nome do cliente no registro
   const feedback = `Cliente: ${clienteNome || 'Não informado'} | Avaliação: ${'★'.repeat(nota)}${'☆'.repeat(5 - nota)} (${nota}/5) | Data: ${new Date().toLocaleString()}`;
 
+  await fs.appendFile(ARQ.avaliacoes, feedback, 'utf8');
   console.log('\n');
   console.log(`Obrigado pelo feedback, ${clienteNome || 'Cliente'}! Você deu ${nota} estrela(s).`);
   console.log('\n');
-  
-  const feedbackFile = path.join(DATA_DIR, 'avaliacoes.txt');
-  await appendCSV(feedbackFile, feedback);
-  console.log(`Avaliação salva em ${feedbackFile}`);
 }
 
-
-  //Emissão de comprovante de compra
-
-import { writeFileSync } from "fs";
-
+//Emissão de comprovante de compra
 async function emitirComprovante(pedido: Pedido) {
-  // Cria a string do comprovante
   let comprovante = '\n===== COMPROVANTE DE PEDIDO =====\n';
   comprovante += `ID do Pedido: ${pedido.id}\n`;
   comprovante += `Cliente: ${pedido.clienteNome ?? 'Cliente não identificado'}\n`;
@@ -624,22 +633,17 @@ async function emitirComprovante(pedido: Pedido) {
 
   comprovante += `\nTotal: R$ ${pedido.total.toFixed(2)}\n`;
   comprovante += `Forma de pagamento: ${pedido.formaPagamento}\n`;
-
-  // Se a forma de pagamento for dinheiro
   if (pedido.trocoPara !== undefined) {
     comprovante += `Troco para: R$ ${pedido.trocoPara.toFixed(2)}\n`;
   }
   
   comprovante += '\n================================\n';
-  console.log('Comprovante emitido com sucesso!');
   comprovante += 'Obrigado pela compra! \n';
 
   // Mostra no terminal
   console.log(comprovante);
-
-  // Salva em arquivo .txt
-  writeFileSync("comprovante.txt", comprovante, { encoding: "utf8" });
-  console.log("Comprovante salvo em 'comprovante.txt'");
+  await fs.appendFile(ARQ.comprovante, comprovante, 'utf8');
+  console.log('Comprovante emitido com sucesso!');
 }
 
   async function fluxoFinalizarPedido() {
