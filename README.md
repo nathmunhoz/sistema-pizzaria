@@ -40,7 +40,7 @@ Exemplo de `package.json` mínimo:
 
 ```bash
 git clone <URL_DO_REPOSITORIO>
-cd pizzaria
+cd sistema-pizzaria
 ```
 
 2. Instale as dependências (apenas TypeScript para desenvolvimento):
@@ -58,7 +58,7 @@ npm run build
 4. Execute o sistema:
 
 ```bash
-npm start
+npm run start
 ```
 
 ---
