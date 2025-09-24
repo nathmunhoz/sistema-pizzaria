@@ -67,18 +67,18 @@ npm run start
 
 ```
 pizzaria/
-│
-├─ csv/                  # Armazena os arquivos CSV e TXT
-│   ├─ clientes.csv
-│   ├─ produtos.csv
-│   ├─ pedidos.csv
-│   ├─ resumo.txt
-│   ├─ comprovante.txt
-│   └─ avaliacoes.txt
-│
-├─ src/
+├─ node_modules
+├─ ts/
+│   ├─ csv/              # Armazena os arquivos CSV e TXT                 
+│       ├─ clientes.csv
+│       ├─ produtos.csv
+│       ├─ pedidos.csv
+│       ├─ resumo.txt
+│       ├─ comprovante.txt
+│       └─ avaliacoes.txt
 │   └─ index.ts          # Código principal do sistema
 │
+├─ package-lock.json
 ├─ package.json
 └─ tsconfig.json
 ```
