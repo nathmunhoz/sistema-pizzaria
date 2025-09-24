@@ -26,3 +26,63 @@ Forma de pagamento: Cartão
 
 ================================
 Obrigado pela compra! 
+
+===== COMPROVANTE DE PEDIDO =====
+ID do Pedido: O-mfxawgl4p1
+Cliente: Nathalia Munhoz
+Endereço: Avenida TypeC-mfv6qfm0d6
+Data: 23/09/2025, 22:23:59
+
+Itens:
+1) Meia-Meia 12p (2 sabores) - x1 - R$ 50.00 (meia calabresa, meia portuguesa)
+
+Total: R$ 50.00
+Forma de pagamento: Vale-alimentacao
+
+================================
+Obrigado pela compra! 
+
+===== COMPROVANTE DE PEDIDO =====
+ID do Pedido: O-mfxb46p67u
+Cliente: Breno
+Endereço entrega: Avenida Eloy
+Data: 23/09/2025, 22:30:00
+
+Itens:
+1) Água sem gás 500ml - x2 - R$ 8.00
+
+Total: R$ 8.00
+Forma de pagamento: Pix
+
+================================
+Obrigado pela compra! 
+
+===== COMPROVANTE DE PEDIDO =====
+ID do Pedido: O-mfxb877apt
+Cliente: Vanessa
+Endereço entrega: rua Piriri Pororo
+Data: 23/09/2025, 22:33:07
+
+Itens:
+1) Coca-Cola Lata - x5 - R$ 30.00
+
+Total: R$ 30.00
+Forma de pagamento: Cartão
+
+================================
+Obrigado pela compra! 
+
+===== COMPROVANTE DE PEDIDO =====
+ID do Pedido: O-mfxbzbqxmr
+Cliente: Nath
+Endereço entrega: Rua Avenida, 123
+Data: 23/09/2025, 22:54:12
+
+Itens:
+1) Água sem gás 500ml - x2 - R$ 8.00
+
+Total: R$ 8.00
+Forma de pagamento: Pix
+
+================================
+Obrigado pela compra! 

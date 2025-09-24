@@ -123,7 +123,7 @@
 
   async function lerClientes(): Promise<Cliente[]> {
     return lerCSV<Cliente>(ARQ.clientes, cols => {
-      const [id, nome, telefone, email, endereco] = cols;
+      const [id, nome, telefone, email, endereco] = cols.map(c => c.trim());
       return { id, nome, telefone, email: email || undefined, endereco: endereco || undefined };
     });
   }
@@ -131,7 +131,10 @@
   async function consultarCliente(idOrNome: string): Promise<Cliente | null> {
     const clientes = await lerClientes();
     const chave = idOrNome.trim().toLowerCase();
-    return clientes.find(c => c.id.toLowerCase() === chave || c.nome.toLowerCase() === chave) ?? null;
+    return clientes.find(c => 
+      c.id?.trim().toLowerCase() === chave || 
+      c.nome?.trim().toLowerCase() === chave
+    ) ?? null;
   }
 
   async function atualizarCliente(id: string, updates: Partial<Cliente>): Promise<boolean> {
@@ -209,10 +212,10 @@
 
   function verCarrinho() {
     if (CARRINHO.length === 0) {
-      console.log('-- Carrinho vazio --');
+      console.log('\n-- Carrinho vazio --');
       return;
     }
-    console.log('--- Carrinho ---');
+    console.log('\n--- Carrinho ---');
     let i = 1;
     for (const it of CARRINHO) {
       console.log(`${i}) ${it.nome} x${it.quantidade} - R$ ${(it.precoUnit * it.quantidade).toFixed(2)} ${it.observacao ? `(${it.observacao})` : ''}`);
@@ -594,7 +597,6 @@ async function filtrarPedidosPorData() {
     }
   }
 
-  // Avaliação do sistema
 async function avaliarExperiencia(clienteNome?: string) {
   console.log('\n===== AVALIAÇÃO =====');
   console.log(`Cliente: ${clienteNome || 'Cliente não identificado'}`);
@@ -611,7 +613,7 @@ async function avaliarExperiencia(clienteNome?: string) {
   // Agora salva o nome do cliente no registro
   const feedback = `Cliente: ${clienteNome || 'Não informado'} | Avaliação: ${'★'.repeat(nota)}${'☆'.repeat(5 - nota)} (${nota}/5) | Data: ${new Date().toLocaleString()}`;
 
-  await fs.appendFile(ARQ.avaliacoes, feedback, 'utf8');
+  await fs.appendFile(ARQ.avaliacoes, feedback + '\n', 'utf8');
   console.log('\n');
   console.log(`Obrigado pelo feedback, ${clienteNome || 'Cliente'}! Você deu ${nota} estrela(s).`);
   console.log('\n');
@@ -619,9 +621,19 @@ async function avaliarExperiencia(clienteNome?: string) {
 
 //Emissão de comprovante de compra
 async function emitirComprovante(pedido: Pedido) {
+  const clientes = await lerClientes();
+  const cliente = pedido.clienteId
+    ? clientes.find(c => c.id === pedido.clienteId)
+    : undefined;
+
   let comprovante = '\n===== COMPROVANTE DE PEDIDO =====\n';
   comprovante += `ID do Pedido: ${pedido.id}\n`;
   comprovante += `Cliente: ${pedido.clienteNome ?? 'Cliente não identificado'}\n`;
+  if ((pedido as any).enderecoEntrega) {
+    comprovante += `Endereço entrega: ${(pedido as any).enderecoEntrega}\n`;
+  } else if (cliente?.endereco) {
+    comprovante += `Endereço: ${cliente.endereco}\n`;
+  }
   comprovante += `Data: ${new Date(pedido.dataISO).toLocaleString()}\n\n`;
   comprovante += 'Itens:\n';
 
@@ -646,50 +658,71 @@ async function emitirComprovante(pedido: Pedido) {
   console.log('Comprovante emitido com sucesso!');
 }
 
-  async function fluxoFinalizarPedido() {
-    if (CARRINHO.length === 0) {
-      console.log('Carrinho vazio. Adicione itens antes de finalizar.');
-      return;
-    }
-    // pergunta se há cliente associado
-    const temCliente = (await ask('Associar a um cliente cadastrado? (s/n): ')).trim().toLowerCase();
-    let clienteId: string | undefined;
-    if (temCliente === 's' || temCliente === 'sim') {
-      const chave = await ask('Digite ID ou nome do cliente: ');
-      const c = await consultarCliente(chave);
-      if (!c) {
-        console.log('Cliente não encontrado, continue sem cliente ou cadastre antes.');
-      } else {
-        clienteId = c.id;
-        console.log(`Pedido associado a ${c.nome}`);
-      }
-    }
-    const pedidoParcial = await finalizarPedido(clienteId);
-    if (!pedidoParcial) return;
+async function atualizarResumo(pedido: Pedido) {
+  const resumo = `Pedido ${pedido.id} | Cliente: ${pedido.clienteNome ?? 'N/A'} | Total: R$ ${pedido.total.toFixed(2)} | Pagamento: ${pedido.formaPagamento}\n`;
+  await fs.appendFile(ARQ.resumo, resumo, 'utf8');
+}
 
-    // escolher forma pagamento
-    console.log('Formas de pagamento: 1) Pix  2) Cartão  3) Dinheiro  4) Vale-alimentacao');
-    const op = (await ask('Escolha: ')).trim();
-    if (op === '1') pedidoParcial.formaPagamento = 'Pix';
-    else if (op === '2') pedidoParcial.formaPagamento = 'Cartão';
-    else if (op === '3') {
-      pedidoParcial.formaPagamento = 'Dinheiro';
-      const trocoStr = await ask('Valor entregue pelo cliente (para calcular troco) - deixe em branco se exato: ');
-      if (trocoStr) {
-        const trocoNum = parseFloat(trocoStr.replace(',', '.')) || 0;
-        pedidoParcial.trocoPara = trocoNum;
+async function fluxoFinalizarPedido() {
+  if (CARRINHO.length === 0) {
+    console.log('Carrinho vazio. Adicione itens antes de finalizar.');
+    return;
+  }
+
+  let clienteId: string | undefined;
+  let enderecoEntrega: string | undefined;
+
+  // pergunta se há cliente associado
+  const temCliente = (await ask('Associar a um cliente cadastrado? (s/n): ')).trim().toLowerCase();
+  if (temCliente === 's' || temCliente === 'sim') {
+    const chave = await ask('Digite ID ou nome do cliente: ');
+    const c = await consultarCliente(chave);
+    if (c) {
+      clienteId = c.id;
+      console.log(`Pedido associado a ${c.nome}`);
+      const usarOutroEndereco = (await ask('Deseja usar outro endereço para este pedido? (s/n): ')).trim().toLowerCase();
+      if (usarOutroEndereco === 's') {
+        enderecoEntrega = await ask('Informe o endereço de entrega: ');
+      } else {
+        enderecoEntrega = c.endereco;
       }
-    } else if (op === '4') pedidoParcial.formaPagamento = 'Vale-alimentacao';
-    else {
-      console.log('Opção inválida. Usando Dinheiro por padrão.');
-      pedidoParcial.formaPagamento = 'Dinheiro';
+    } else {
+      console.log('Cliente não encontrado, continue sem cliente ou cadastre antes.');
+    } 
+  } else {
+    enderecoEntrega = await ask('Informe o endereço de entrega: ');
+  }
+    
+  const pedidoParcial = await finalizarPedido(clienteId);
+  if (!pedidoParcial) return;
+
+  (pedidoParcial as any).enderecoEntrega = enderecoEntrega;
+
+  // escolher forma pagamento
+  console.log('Formas de pagamento: 1) Pix  2) Cartão  3) Dinheiro  4) Vale-alimentacao');
+  const op = (await ask('Escolha: ')).trim();
+  if (op === '1') pedidoParcial.formaPagamento = 'Pix';
+  else if (op === '2') pedidoParcial.formaPagamento = 'Cartão';
+  else if (op === '3') {
+    pedidoParcial.formaPagamento = 'Dinheiro';
+    const trocoStr = await ask('Valor entregue pelo cliente (para calcular troco) - deixe em branco se exato: ');
+    if (trocoStr) {
+      const trocoNum = parseFloat(trocoStr.replace(',', '.')) || 0;
+      pedidoParcial.trocoPara = trocoNum;
     }
+  } else if (op === '4') pedidoParcial.formaPagamento = 'Vale-alimentacao';
+  else {
+    console.log('Opção inválida. Usando Dinheiro por padrão.');
+    pedidoParcial.formaPagamento = 'Dinheiro';
+  }
 
   //Grava o pedido
   await gravarPedido(pedidoParcial);
 
   //Emite o comprovante
   await emitirComprovante(pedidoParcial);
+
+  await atualizarResumo(pedidoParcial);
 
   //Pede avaliação
   await avaliarExperiencia(pedidoParcial.clienteNome);
