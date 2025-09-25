@@ -281,76 +281,117 @@
     console.log(`Pedido ${pedido.id} gravado. Total R$ ${pedido.total.toFixed(2)}. Forma: ${pedido.formaPagamento}`);
   }
 
-  // ---------- Relatórios ----------
-  async function gerarRelatorios() {
-    const pedidos = await lerPedidos();
-    if (pedidos.length === 0) {
-      console.log('Nenhum pedido registrado.');
-      return;
+// ---------- Relatórios ----------
+async function gerarRelatorios() {
+  const pedidos = await lerPedidos();
+  if (pedidos.length === 0) {
+    console.log('Nenhum pedido registrado.');
+    return;
+  }
+
+  // total de vendas
+  const totalVendas = pedidos.reduce((s, p) => s + p.total, 0);
+  console.log(`Total vendas: R$ ${totalVendas.toFixed(2)} (${pedidos.length} pedidos)`);
+
+  // vendas por cliente (nome)
+  const vendasPorCliente = new Map<string, { total: number; qty: number }>();
+  for (const p of pedidos) {
+    const key = p.clienteNome ?? 'Cliente não informado';
+    const cur = vendasPorCliente.get(key) ?? { total: 0, qty: 0 };
+    cur.total += p.total;
+    cur.qty += 1;
+    vendasPorCliente.set(key, cur);
+  }
+  console.log('\nVendas por cliente:');
+  vendasPorCliente.forEach((v, nome) => {
+    console.log(`Cliente: ${nome}, Quantidade: ${v.qty}, Total: R$ ${v.total.toFixed(2)}`);
+  });
+
+  // produtos mais vendidos
+  const contagemProdutos = new Map<string, number>();
+  for (const p of pedidos) {
+    for (const it of p.itens) {
+      const cur = contagemProdutos.get(it.nome) ?? 0;
+      contagemProdutos.set(it.nome, cur + it.quantidade);
     }
+  }
+  const ordenado = Array.from(contagemProdutos.entries()).sort((a, b) => b[1] - a[1]);
+  console.log('\nProdutos mais vendidos (por unidades):');
+  for (const [nome, q] of ordenado.slice(0, 10)) {
+    console.log(`- ${nome}: ${q}`);
+  }
 
-    // total de vendas
-    const totalVendas = pedidos.reduce((s, p) => s + p.total, 0);
-    console.log(`Total vendas: R$ ${totalVendas.toFixed(2)} (${pedidos.length} pedidos)`);
+  const pizzasPorDia = new Map<string, number>();
+  let totalPizzasMes = 0;
 
-    // vendas por cliente (nome)
-    const vendasPorCliente = new Map<string, { total: number; qty: number }>();
-    for (const p of pedidos) {
-      const key = p.clienteNome ?? 'Cliente não informado';
-      const cur = vendasPorCliente.get(key) ?? { total: 0, qty: 0 };
-      cur.total += p.total;
-      cur.qty += 1;
-      vendasPorCliente.set(key, cur);
-    }
-    console.log('\nVendas por cliente:');
-    vendasPorCliente.forEach((v, nome) => {
-      console.log(`Cliente: ${nome}, Quantidade: ${v.qty}, Total: R$ ${v.total.toFixed(2)}`);
-    });
+  const agora = new Date();
+  const mesAtual = agora.getMonth();
+  const anoAtual = agora.getFullYear();
 
-    // produtos mais vendidos
-    const contagemProdutos = new Map<string, number>();
-    for (const p of pedidos) {
-      for (const it of p.itens) {
-        const cur = contagemProdutos.get(it.nome) ?? 0;
-        contagemProdutos.set(it.nome, cur + it.quantidade);
+  for (const p of pedidos) {
+    for (const it of p.itens) {
+      const nome = it.nome.toLowerCase();
+      if (
+        nome.includes("inteira") ||
+        nome.includes("meia") || 
+        nome.includes("pizza")
+      ) { 
+        const dataPedido = p.dataISO ? new Date(p.dataISO) : new Date();
+        const chaveDia = dataPedido.toLocaleDateString('pt-BR');
+
+        // pizzas por dia
+        const qtdDia = pizzasPorDia.get(chaveDia) ?? 0;
+        pizzasPorDia.set(chaveDia, qtdDia + it.quantidade);
+
+        // pizzas no mês atual
+        if (dataPedido.getMonth() === mesAtual && dataPedido.getFullYear() === anoAtual) {
+          totalPizzasMes += it.quantidade;
+        }
       }
     }
-    const ordenado = Array.from(contagemProdutos.entries()).sort((a, b) => b[1] - a[1]);
-    console.log('\nProdutos mais vendidos (por unidades):');
-    for (const [nome, q] of ordenado.slice(0, 10)) {
-      console.log(`- ${nome}: ${q}`);
-    }
-
-    // export resumo em arquivo resumo.txt
-    const linhasResumo = [
-      `Resumo de Vendas - ${new Date().toLocaleString()}`,
-      `Total pedidos: ${pedidos.length}`,
-      `Total vendas: R$ ${totalVendas.toFixed(2)}`,
-      '',
-      'Top produtos:',
-      ...ordenado.slice(0, 10).map(([n, q]) => `${n}: ${q}`),
-      '',
-      'Vendas por cliente:',
-      ...Array.from(vendasPorCliente.entries()).map(([n, s]) => `${n}: ${s.qty} pedidos - R$ ${s.total.toFixed(2)}`)
-    ];
-    await fs.writeFile(ARQ.resumo, linhasResumo.join('\n'), 'utf8');
   }
 
-  async function lerPedidos(): Promise<Pedido[]> {
-    return lerCSV<Pedido>(ARQ.pedidos, cols => {
-      // id,clienteId,clienteNome,total,formaPagamento,troco,dataISO,itensResumo
-      const [id, clienteId, clienteNome, total, formaPagamento, troco, dataISO, itensResumo] = cols;
-      const itens: ItemCarrinho[] = (itensResumo || '').split(';').filter(Boolean).map(tok => {
-        // form "Nome xQ" tentativa de parse simples
-        const m = tok.match(/^(.*)\sx(\d+)$/);
-        if (m) {
-          return { produtoId: '', nome: m[1].trim(), quantidade: parseInt(m[2], 10), precoUnit: 0 };
-        }
-        return { produtoId: '', nome: tok.trim(), quantidade: 1, precoUnit: 0 };
-      });
-      return { id, clienteId: clienteId || undefined, clienteNome: clienteNome || undefined, itens, total: parseFloat(total || '0'), formaPagamento: (formaPagamento as FormaPagamento) ?? 'Dinheiro', trocoPara: troco ? parseFloat(troco) : undefined, dataISO: dataISO || new Date().toISOString() };
+  console.log("\nQuantidade de pizzas vendidas por dia:");
+  pizzasPorDia.forEach((qtd, dia) => {
+    console.log(`${dia}: ${qtd} pizzas`);
+  });
+  console.log(`\nQuantidade de pizzas vendidas no mês: ${totalPizzasMes}`);
+
+  // export resumo em arquivo resumo.txt
+  const linhasResumo = [
+    `Resumo de Vendas - ${new Date().toLocaleString()}`,
+    `Total pedidos: ${pedidos.length}`,
+    `Total vendas: R$ ${totalVendas.toFixed(2)}`,
+    '',
+    'Top produtos:',
+    ...ordenado.slice(0, 10).map(([n, q]) => `${n}: ${q}`),
+    '',
+    'Vendas por cliente:',
+    ...Array.from(vendasPorCliente.entries()).map(([n, s]) => `${n}: ${s.qty} pedidos - R$ ${s.total.toFixed(2)}`),
+    '',
+    'Pizza por dia:',
+    ...Array.from(pizzasPorDia.entries()).map(([dia, qtd]) => `${dia}: ${qtd} pizzas`),
+    '',
+    `Pizzas no mês: ${totalPizzasMes}`
+  ];
+  await fs.writeFile(ARQ.resumo, linhasResumo.join('\n'), 'utf8');
+}
+
+async function lerPedidos(): Promise<Pedido[]> {
+  return lerCSV<Pedido>(ARQ.pedidos, cols => {
+    // id,clienteId,clienteNome,total,formaPagamento,troco,dataISO,itensResumo
+    const [id, clienteId, clienteNome, total, formaPagamento, troco, dataISO, itensResumo] = cols;
+    const itens: ItemCarrinho[] = (itensResumo || '').split(';').filter(Boolean).map(tok => {
+      // form "Nome xQ" tentativa de parse simples
+      const m = tok.match(/^(.*)\sx(\d+)$/);
+      if (m) {
+        return { produtoId: '', nome: m[1].trim(), quantidade: parseInt(m[2], 10), precoUnit: 0 };
+      }
+      return { produtoId: '', nome: tok.trim(), quantidade: 1, precoUnit: 0 };
     });
-  }
+    return { id, clienteId: clienteId || undefined, clienteNome: clienteNome || undefined, itens, total: parseFloat(total || '0'), formaPagamento: (formaPagamento as FormaPagamento) ?? 'Dinheiro', trocoPara: troco ? parseFloat(troco) : undefined, dataISO: dataISO || new Date().toISOString() };
+  });
+}
 
   // ---------- FILTRO DE PEDIDOS POR DATA ----------
 
@@ -658,11 +699,6 @@ async function emitirComprovante(pedido: Pedido) {
   console.log('Comprovante emitido com sucesso!');
 }
 
-async function atualizarResumo(pedido: Pedido) {
-  const resumo = `Pedido ${pedido.id} | Cliente: ${pedido.clienteNome ?? 'N/A'} | Total: R$ ${pedido.total.toFixed(2)} | Pagamento: ${pedido.formaPagamento}\n`;
-  await fs.appendFile(ARQ.resumo, resumo, 'utf8');
-}
-
 async function fluxoFinalizarPedido() {
   if (CARRINHO.length === 0) {
     console.log('Carrinho vazio. Adicione itens antes de finalizar.');
@@ -721,8 +757,6 @@ async function fluxoFinalizarPedido() {
 
   //Emite o comprovante
   await emitirComprovante(pedidoParcial);
-
-  await atualizarResumo(pedidoParcial);
 
   //Pede avaliação
   await avaliarExperiencia(pedidoParcial.clienteNome);

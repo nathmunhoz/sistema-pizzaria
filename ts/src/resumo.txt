@@ -1,0 +1,17 @@
+Resumo de Vendas - 25/09/2025, 11:19:18
+Total pedidos: 2
+Total vendas: R$ 143.00
+
+Top produtos:
+Água sem gás 500ml: 2
+Portuguesa (Inteira): 2
+Calabresa (Inteira): 1
+
+Vendas por cliente:
+Nathalia: 1 pedidos - R$ 53.00
+Breno: 1 pedidos - R$ 90.00
+
+Pizza por dia:
+25/09/2025: 3 pizzas
+
+Pizzas no mês: 3

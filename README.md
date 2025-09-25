@@ -1,6 +1,12 @@
 # Pizzaria Delivery - Sistema de Controle
 
-Sistema de gerenciamento de pizzaria em **Node.js/TypeScript**. Permite cadastrar clientes e produtos, gerenciar carrinho, finalizar pedidos, emitir comprovantes e gerar relatórios.
+Sistema de gerenciamento de pizzaria em **Node.js/TypeScript**. Permite cadastrar clientes e produtos, gerenciar carrinho, finalizar pedidos, emitir comprovantes e gerar relatórios completos.
+
+### Autores
+* Breno Miguel de Souza Afonso - RA: 2500998
+* Nathalia Batista Munhoz - RA: 2501617
+* Vanessa da Silva Santos - RA: 2520743
+* Winley Jaeanty - RA: 2525564
 
 ---
 
@@ -18,19 +24,31 @@ Exemplo de `package.json` mínimo:
 
 ```json
 {
-  "name": "pizzaria",
+  "name": "trabalho",
   "version": "1.0.0",
-  "main": "dist/index.js",
+  "main": "index.js",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "ts-node ts/index.ts", "build": "tsc", "run:dist": "node dist/index.js"
   },
-  "dependencies": {},
+  "author": "",
+  "license": "ISC",
+  "description": "",
   "devDependencies": {
-    "typescript": "^5.1.0"
+    "@types/node": "^24.3.1",
+    "@types/readline-sync": "^1.4.8",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "readline-sync": "^1.4.10"
   }
 }
 ```
+
+Exemplo de `tsconfig.json`:
+
+![tsconfig](tsconfig.png)
 
 ---
 
@@ -66,22 +84,31 @@ npm run start
 ## Estrutura do Projeto
 
 ```
-pizzaria/
+sistema-pizzaria/
 ├─ node_modules
 ├─ ts/
-│   ├─ csv/              # Armazena os arquivos CSV e TXT                 
+│   ├─ img/ 
+│       ├─ Brace Map.png
+│       ├─ tsconfig.png
+│       ├─ telainicial.png
+│       └─ diretorios.png
+│   ├─ src/              # Armazena os arquivos CSV e TXT                 
 │       ├─ clientes.csv
 │       ├─ produtos.csv
 │       ├─ pedidos.csv
 │       ├─ resumo.txt
 │       ├─ comprovante.txt
 │       └─ avaliacoes.txt
+│   ├─ index.js
 │   └─ index.ts          # Código principal do sistema
 │
 ├─ package-lock.json
 ├─ package.json
+├─ README.md
 └─ tsconfig.json
 ```
+
+![alt text](diretorios.png)
 
 ---
 
@@ -99,7 +126,7 @@ pizzaria/
 
 ### Carrinho e Pedidos
 
-* Adicionar e remover itens do carrinho
+* Adicionar, ver, limpar e remover itens do carrinho
 * Finalizar pedido com escolha de forma de pagamento
 * Emissão de comprovante no console e arquivo
 
@@ -113,6 +140,14 @@ pizzaria/
 
 * Clientes podem avaliar o atendimento de 1 a 5 estrelas
 * Avaliações são registradas em `avaliacoes.txt`
+
+![diagrama das funcionalidades](<Brace Map.png>)
+
+---
+
+## Tela Inicial
+
+![tela inicial](telainicial.png)
 
 ---
 
