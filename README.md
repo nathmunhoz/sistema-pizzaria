@@ -64,10 +64,10 @@ cd sistema-pizzaria
 2. Instale as dependências (apenas TypeScript para desenvolvimento):
 
 ```bash
-npm install
+npm i -D typescript ts-node @types/node
 ```
 
-3. Permissões dos binários:
+3. Permissões dos binários (para linux):
 
 ```bash
 chmod +x ./node_modules/.bin/tsc
