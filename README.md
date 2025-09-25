@@ -48,7 +48,7 @@ Exemplo de `package.json` mínimo:
 
 Exemplo de `tsconfig.json`:
 
-![tsconfig](tsconfig.png)
+![tsconfig](ts/img/tsconfig.png)
 
 ---
 
@@ -108,7 +108,7 @@ sistema-pizzaria/
 └─ tsconfig.json
 ```
 
-![alt text](diretorios.png)
+![alt text](ts/img/diretorios.png)
 
 ---
 
@@ -141,13 +141,13 @@ sistema-pizzaria/
 * Clientes podem avaliar o atendimento de 1 a 5 estrelas
 * Avaliações são registradas em `avaliacoes.txt`
 
-![diagrama das funcionalidades](<Brace Map.png>)
+![diagrama das funcionalidades](ts/img/Brace%20Map.png)
 
 ---
 
 ## Tela Inicial
 
-![tela inicial](telainicial.png)
+![tela inicial](ts/img/telainicial.png)
 
 ---
 
