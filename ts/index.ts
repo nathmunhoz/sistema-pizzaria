@@ -3,7 +3,7 @@
   import { stdin as input, stdout as output } from 'process';
   import * as readline from 'readline';
 
-  const DATA_DIR = path.join(__dirname, 'csv'); // altere se quiser colocar em outra pasta
+  const DATA_DIR = path.join(__dirname, 'src'); 
   const ARQ = {
     clientes: path.join(DATA_DIR, 'clientes.csv'),
     produtos: path.join(DATA_DIR, 'produtos.csv'),
