@@ -67,13 +67,21 @@ cd sistema-pizzaria
 npm install
 ```
 
-3. Compile o TypeScript:
+3. Permissões dos binários:
 
 ```bash
+chmod +x ./node_modules/.bin/tsc
+chmod +x ./node_modules/.bin/ts-node
+```
+
+4. Compile o TypeScript:
+
+```bash
+npx tsc
 npm run build
 ```
 
-4. Execute o sistema:
+5. Execute o sistema:
 
 ```bash
 npm run start
